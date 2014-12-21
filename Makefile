@@ -29,3 +29,5 @@ watch_less: $(CATW) dist copy
 build: clean build_less
 
 watch: clean watch_less
+
+.PHONY: clean build copy watch watch_less build_less
