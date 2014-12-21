@@ -1,0 +1,23 @@
+{
+  "name": "tard-web",
+  "version": "0.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andersekdahl/tard-web.git"
+  },
+  "author": "Anders Ekdahl, Nic Berggren",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andersekdahl/tard-web/issues"
+  },
+  "homepage": "https://github.com/andersekdahl/tard-web",
+  "devDependencies": {
+    "catw": "^0.2.0",
+    "less": "^2.1.2"
+  }
+}
