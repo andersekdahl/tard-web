@@ -24,7 +24,7 @@ build_less: $(LESSC) dist copy
 	$(LESSC) $(MAIN_LESS) > dist/bundle.css
 
 watch_less: $(CATW) dist copy
-	$(CATW) -c '$(LESSC) -' '$(MAIN_LESS)' -o dist/bundle.css -v
+	$(CATW) -c '$(LESSC) $(MAIN_LESS)' 'src/**/*.less' -o dist/bundle.css -v
 
 build: clean build_less
 
