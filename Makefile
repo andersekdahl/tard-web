@@ -29,8 +29,9 @@ build_cljs: dist copy
 watch_less: $(CATW) dist copy
 	$(CATW) -c '$(LESSC) $(MAIN_LESS)' 'src/**/*.less' -o dist/bundle.css -v
 
+watch_cljs: dist copy
+	lein cljsbuild auto dev
+
 build: clean build_less build_cljs
 
-watch: clean watch_less
-
-.PHONY: clean build copy watch watch_less build_less
+.PHONY: clean build copy watch watch_less build_less watch_cljs build_cljs
