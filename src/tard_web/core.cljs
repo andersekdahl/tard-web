@@ -32,7 +32,22 @@
 
 ;; Om stuff, extract this later
 
-(def app-state (atom {:messages []}))
+(def app-state (atom {:messages [{:id 1 :user "NickyB" :date "2 days ago" :message "Denna tarden är den bästa tarden!"}]}))
+
+(defn post-message [ev message-field app]
+  (.preventDefault ev)
+  (om/transact! app :messages #(conj % {:id (rand-int 1000) :user "Unknown" :message (.-value message-field)}))
+  (set! (.-value message-field) ""))
+
+(defn message-view [message owner]
+  (reify
+    om/IRenderState
+    (render-state [this state]
+      (html [:li 
+              [:span {:class "meta"}
+                [:span {:class "user"} (:user message)]
+                [:span {:class "date"} (:date message)]]
+              [:span {:class "message"} (:message message)]]))))
 
 (defn messages-view [app owner]
   (reify
@@ -50,13 +65,9 @@
                 [:h2 "Messages"]
                 [:div {:class "content"}
                   [:ol {:class "messages"}
-                    [:li 
-                      [:span {:class "meta"}
-                        [:span {:class "user"} "NickyB"]
-                        [:span {:class "date"} "2 days ago"]]
-                      [:span {:class "message"} "Denna tarden är den bästa tarden!"]]]
-                  [:form {:class "new-message"}
-                    [:textarea {:placeholder "Write a tarded message here"}]
+                    (om/build-all message-view (:messages app) {:key :id})]
+                  [:form {:class "new-message" :on-submit #(post-message % (om/get-node owner "message-field") app)}
+                    [:textarea {:ref "message-field" :placeholder "Write a tarded message here"}]
                     [:input {:type "submit" :value "Send"}]]]]]))))
 
 (om/root messages-view app-state
