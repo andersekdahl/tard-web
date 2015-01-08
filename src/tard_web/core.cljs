@@ -34,9 +34,9 @@
 
 (def app-state (atom {:messages [{:id 1 :user "NickyB" :date "2 days ago" :message "Denna tarden är den bästa tarden!"}]}))
 
-(defn post-message [ev message-field]
+(defn post-message [ev message-field messages]
   (.preventDefault ev)
-  (om/transact! (om/to-cursor @app-state app-state) :messages #(conj % {:id (rand-int 1000) :user "Unknown" :message (.-value message-field)}))
+  (om/transact! messages #(conj % {:id (rand-int 1000) :user "Unknown" :message (.-value message-field)}))
   (set! (.-value message-field) ""))
 
 (defn message-view [message owner]
@@ -56,19 +56,20 @@
       {})
     om/IRenderState
     (render-state [this state]
-      (html [:div {:class "page-wrap"}
-              [:nav {:id "main-nav"}
-                [:h1 "Tard"]
-                [:ul
-                  [:li "Messages"]]]
-              [:div {:id "main-content"}
-                [:h2 "Messages"]
-                [:div {:class "content"}
-                  [:ol {:class "messages"}
-                    (om/build-all message-view (:messages app) {:key :id})]
-                  [:form {:class "new-message" :on-submit #(post-message % (om/get-node owner "message-field"))}
-                    [:textarea {:ref "message-field" :placeholder "Write a tarded message here"}]
-                    [:input {:type "submit" :value "Send"}]]]]]))))
+      (let [messages (:messages app)]
+        (html [:div {:class "page-wrap"}
+                [:nav {:id "main-nav"}
+                  [:h1 "Tard"]
+                  [:ul
+                    [:li "Messages"]]]
+                [:div {:id "main-content"}
+                  [:h2 "Messages"]
+                  [:div {:class "content"}
+                    [:ol {:class "messages"}
+                      (om/build-all message-view messages {:key :id})]
+                    [:form {:class "new-message" :on-submit #(post-message % (om/get-node owner "message-field") messages)}
+                      [:textarea {:ref "message-field" :placeholder "Write a tarded message here"}]
+                      [:input {:type "submit" :value "Send"}]]]]])))))
 
 (om/root messages-view app-state
   {:target (.querySelector js/document "body")})
