@@ -7,6 +7,8 @@
     [om.core :as om :include-macros true]
     [om.dom :as dom :include-macros true]
     [cljs.core.async :as async :refer (<! >! put! chan)]
+    [cljs-time.core :as time]
+    [cljs-time.format :as format]
     [taoensso.encore :as encore :refer (logf)]
     [taoensso.sente :as sente :refer (cb-success?)]
     [taoensso.sente.packers.transit :as sente-transit]))
@@ -32,17 +34,20 @@
 
 ;; Om stuff, extract this later
 
-(def app-state (atom {:messages [{:id 1 :user "NickyB" :date "2 days ago" :message "Denna tarden är den bästa tarden!"}]}))
+(def app-state (atom {:messages [{:id 1 :user "NickyB" :date (time/date-time 2014 12 12) :message "Denna tarden är den bästa tarden!"}]}))
+
+(defn format-date [date]
+  (format/unparse (format/formatter "yyyy-MM-dd HH:mm:ss") date))
 
 (defn create-message [message user]
-  {:id (rand-int 1000) :user user :message message})
+  {:id (rand-int 1000) :user user :message message :date (time/now)})
 
 (defn post-message [ev message-field messages]
   (.preventDefault ev)
   (let [message (create-message (.-value message-field) "Unknown")]
     (om/transact! messages #(conj % message))
     (set! (.-value message-field) "")
-    (chsk-send! [::new-message message])))
+    (chsk-send! [::new-message (assoc message :date (format/unparse (format/formatters :date-hour-minute-second) (:date message)))])))
 
 (defn message-view [message owner]
   (reify
@@ -51,7 +56,7 @@
       (html [:li 
               [:span {:class "meta"}
                 [:span {:class "user"} (:user message)]
-                [:span {:class "date"} (:date message)]]
+                [:span {:class "date"} (format-date (:date message))]]
               [:span {:class "message"} (:message message)]]))))
 
 (defn messages-view [app owner]
