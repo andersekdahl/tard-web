@@ -34,9 +34,9 @@
 
 (def app-state (atom {:messages [{:id 1 :user "NickyB" :date "2 days ago" :message "Denna tarden är den bästa tarden!"}]}))
 
-(defn post-message [ev message-field app]
+(defn post-message [ev message-field]
   (.preventDefault ev)
-  (om/transact! app :messages #(conj % {:id (rand-int 1000) :user "Unknown" :message (.-value message-field)}))
+  (om/transact! (om/to-cursor @app-state app-state) :messages #(conj % {:id (rand-int 1000) :user "Unknown" :message (.-value message-field)}))
   (set! (.-value message-field) ""))
 
 (defn message-view [message owner]
@@ -66,7 +66,7 @@
                 [:div {:class "content"}
                   [:ol {:class "messages"}
                     (om/build-all message-view (:messages app) {:key :id})]
-                  [:form {:class "new-message" :on-submit #(post-message % (om/get-node owner "message-field") app)}
+                  [:form {:class "new-message" :on-submit #(post-message % (om/get-node owner "message-field"))}
                     [:textarea {:ref "message-field" :placeholder "Write a tarded message here"}]
                     [:input {:type "submit" :value "Send"}]]]]]))))
 
