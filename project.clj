@@ -3,7 +3,11 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2665"]]
+                 [org.clojure/clojurescript "0.0-2665"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [com.taoensso/sente "1.2.0"]
+                 [com.taoensso/timbre "3.3.1"]
+                 [com.cognitect/transit-cljs "0.8.194"]]
 
   :node-dependencies [[source-map-support "0.2.8"]]
 
