@@ -34,9 +34,12 @@
 
 (def app-state (atom {:messages [{:id 1 :user "NickyB" :date "2 days ago" :message "Denna tarden är den bästa tarden!"}]}))
 
+(defn create-message [message user]
+  {:id (rand-int 1000) :user user :message message})
+
 (defn post-message [ev message-field messages]
   (.preventDefault ev)
-  (om/transact! messages #(conj % {:id (rand-int 1000) :user "Unknown" :message (.-value message-field)}))
+  (om/transact! messages #(conj % (create-message (.-value message-field) "Unknown")))
   (set! (.-value message-field) ""))
 
 (defn message-view [message owner]
