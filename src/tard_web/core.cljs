@@ -1,63 +1,63 @@
 (ns tard-web.core
   (:require-macros
-	  [cljs.core.async.macros :as asyncm :refer (go go-loop)])
+    [cljs.core.async.macros :as asyncm :refer (go go-loop)])
   (:require
-	  [clojure.string :as str]
-	  [cljs.core.async :as async :refer (<! >! put! chan)]
-	  [taoensso.encore :as encore :refer (logf)]
-	  [taoensso.sente :as sente :refer (cb-success?)]
+    [clojure.string :as str]
+    [sablono.core :as html :refer-macros [html]]
+    [om.core :as om :include-macros true]
+    [om.dom :as dom :include-macros true]
+    [cljs.core.async :as async :refer (<! >! put! chan)]
+    [taoensso.encore :as encore :refer (logf)]
+    [taoensso.sente :as sente :refer (cb-success?)]
     [taoensso.sente.packers.transit :as sente-transit]))
 
 (enable-console-print!)
 
+;; sente stuff, extract this later
+
 (def packer (sente-transit/get-flexi-packer :edn))
 
 (let [{:keys [chsk ch-recv send-fn state]}
-			(sente/make-channel-socket! "localhost:8080/chsk" ; Note the same URL as before
-				{:type :auto :packer packer})]
-	(def chsk chsk)
-	(def ch-chsk ch-recv)
-	(def chsk-send! send-fn)
-	(def chsk-state state))
+      (sente/make-channel-socket! "localhost:8080/chsk" ; Note the same URL as before
+        {:type :auto :packer packer})]
+  (def chsk chsk)
+  (def ch-chsk ch-recv)
+  (def chsk-send! send-fn)
+  (def chsk-state state))
 
-(defmulti event-msg-handler :id)
+(go-loop []
+  (let [v (<! ch-chsk)]
+    (println "val: " v))
+  (recur))
 
-(defn event-msg-handler* [{:as ev-msg :keys [id ?data event]}]
-	(logf "Event: %s" event)
-	(event-msg-handler ev-msg))
+;; Om stuff, extract this later
 
-(defmethod event-msg-handler :default [{:as ev-msg :keys [event]}]
-	(logf "Unhandled event: %s" event))
+(def app-state (atom {:messages []}))
 
-(defmethod event-msg-handler :chsk/state [{:as ev-msg :keys [?data]}]
-	(if (= ?data {:first-open? true})
-		(logf "Channel socket successfully established!")
-		(logf "Channel socket state change: %s" ?data)))
+(defn messages-view [app owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {})
+    om/IRenderState
+    (render-state [this state]
+      (html [:div {:class "page-wrap"}
+              [:nav {:id "main-nav"}
+                [:h1 "Tard"]
+                [:ul
+                  [:li "Messages"]]]
+              [:div {:id "main-content"}
+                [:h2 "Messages"]
+                [:div {:class "content"}
+                  [:ol {:class "messages"}
+                    [:li 
+                      [:span {:class "meta"}
+                        [:span {:class "user"} "NickyB"]
+                        [:span {:class "date"} "2 days ago"]]
+                      [:span {:class "message"} "Denna tarden är den bästa tarden!"]]]
+                  [:form {:class "new-message"}
+                    [:textarea {:placeholder "Write a tarded message here"}]
+                    [:input {:type "submit" :value "Send"}]]]]]))))
 
-(defmethod event-msg-handler :chsk/recv [{:as ev-msg :keys [?data]}]
-	(logf "Push event from server: %s" ?data))
-
-(when-let [target-el (.querySelector js/document "h1")]
-	(.addEventListener target-el "click"
-		(fn [ev]
-			(logf "Button 1 was clicked (won't receive any reply from server)")
-			(chsk-send! [::button1 {:had-a-callback? "nope"}]))))
-
-(when-let [target-el (.querySelector js/document "h2")]
-	(.addEventListener target-el "click"
-	(fn [ev]
-		(logf "Button 2 was clicked (will receive reply from server)")
-		(chsk-send! [::button2 {:had-a-callback? "indeed"}] 5000
-			(fn [cb-reply] (logf "Callback reply: %s" cb-reply))))))
-
-(def router_ (atom nil))
-
-(defn stop-router! [] (when-let [stop-f @router_] (stop-f)))
-(defn start-router! []
-	(stop-router!)
-	(reset! router_ (sente/start-chsk-router! ch-chsk event-msg-handler*)))
-
-(defn start! []
-	(start-router!))
-
-(start!)
+(om/root messages-view app-state
+  {:target (.querySelector js/document "body")})
