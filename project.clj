@@ -7,9 +7,10 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [secretary "0.4.0"]
                  [sablono "0.2.22"]
-                 [om "0.8.0-rc1"]
+                 [om "0.7.3"]
                  [com.taoensso/sente "1.2.0"]
                  [com.taoensso/timbre "3.3.1"]
+                 [com.andrewmcveigh/cljs-time "0.3.0"]
                  [com.cognitect/transit-cljs "0.8.194"]]
 
   :node-dependencies [[source-map-support "0.2.8"]]
