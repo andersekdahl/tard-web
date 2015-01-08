@@ -39,8 +39,10 @@
 
 (defn post-message [ev message-field messages]
   (.preventDefault ev)
-  (om/transact! messages #(conj % (create-message (.-value message-field) "Unknown")))
-  (set! (.-value message-field) ""))
+  (let [message (create-message (.-value message-field) "Unknown")]
+    (om/transact! messages #(conj % message))
+    (set! (.-value message-field) "")
+    (chsk-send! [::new-message message])))
 
 (defn message-view [message owner]
   (reify
