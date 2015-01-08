@@ -13,7 +13,7 @@
 (def packer (sente-transit/get-flexi-packer :edn))
 
 (let [{:keys [chsk ch-recv send-fn state]}
-			(sente/make-channel-socket! "localhost:51228/chsk" ; Note the same URL as before
+			(sente/make-channel-socket! "localhost:8080/chsk" ; Note the same URL as before
 				{:type :auto :packer packer})]
 	(def chsk chsk)
 	(def ch-chsk ch-recv)
@@ -41,7 +41,14 @@
 	(.addEventListener target-el "click"
 		(fn [ev]
 			(logf "Button 1 was clicked (won't receive any reply from server)")
-			(chsk-send! [:example/button1 {:had-a-callback? "nope"}]))))
+			(chsk-send! [::button1 {:had-a-callback? "nope"}]))))
+
+(when-let [target-el (.querySelector js/document "h2")]
+	(.addEventListener target-el "click"
+	(fn [ev]
+		(logf "Button 2 was clicked (will receive reply from server)")
+		(chsk-send! [::button2 {:had-a-callback? "indeed"}] 5000
+			(fn [cb-reply] (logf "Callback reply: %s" cb-reply))))))
 
 (def router_ (atom nil))
 
