@@ -19,6 +19,7 @@ clean:
 
 copy: dist
 	cp src/index.html dist/index.html
+	cp vendor/react-0.8.0.js dist/react-0.8.0.js
 
 build_less: $(LESSC) dist copy
 	$(LESSC) $(MAIN_LESS) > dist/bundle.css
