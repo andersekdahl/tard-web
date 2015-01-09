@@ -34,7 +34,7 @@
 
 ;; Om stuff, extract this later
 
-(def app-state (atom {:messages [{:id 1 :user "NickyB" :date (time/date-time 2014 12 12) :message "Denna tarden är den bästa tarden!"}]}))
+(def app-state (atom {:messages []}))
 
 (defn format-date [date]
   (format/unparse (format/formatter "yyyy-MM-dd HH:mm:ss") date))
