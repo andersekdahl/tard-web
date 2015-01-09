@@ -17,6 +17,8 @@
 
 ;; sente stuff, extract this later
 
+(def app-state (atom {:messages [] :user nil}))
+
 (def packer (sente-transit/get-flexi-packer :edn))
 
 (defn chsk-url-fn [path {:as window-location :keys [protocol pathname]} websocket?]
@@ -31,14 +33,27 @@
   (def chsk-send! send-fn)
   (def chsk-state state))
 
+(defn message-exists? [message]
+  (some #(= (:id %) (:id message)) (:messages @app-state)))
+
+(defn parse-date [date]
+  (format/parse (format/formatters :date-hour-minute-second) (str date)))
+
 (go-loop []
-  (let [v (<! ch-chsk)]
-    (println "val: " v))
-  (recur))
+  ; todo: ?data in v can either be a vector or a map, which
+  ; leads to this somewhat ugly code.
+  (let [v (<! ch-chsk)
+        data (vec (:?data v))
+        message (nth data 1)]
+
+    (and (= :messages/new (nth data 0)) (not (message-exists? message))
+      (om/transact!
+        (om/to-cursor @app-state app-state [])
+        :messages
+        #(conj % (assoc message :date (parse-date (:date message))))))
+  (recur)))
 
 ;; Om stuff, extract this later
-
-(def app-state (atom {:messages [] :user nil}))
 
 (defn format-date [date]
   (format/unparse (format/formatter "yyyy-MM-dd HH:mm:ss") date))
@@ -46,18 +61,17 @@
 (defn create-message [message user]
   {:id (rand-int 1000) :user user :message message :date (time/now)})
 
-(defn post-message [ev message-field messages user]
-  (.preventDefault ev)
-  (let [message (create-message (.-value message-field) (:username user))]
+(defn post-message [message-field messages username]
+  (let [message (create-message (.-value message-field) username)]
     (om/transact! messages #(conj % message))
     (set! (.-value message-field) "")
-    (chsk-send! [::new-message (assoc message :date (format/unparse (format/formatters :date-hour-minute-second) (:date message)))])))
+    (chsk-send! [:messages/new (assoc message :date (format/unparse (format/formatters :date-hour-minute-second) (:date message)))])))
 
 (defn message-view [message owner]
   (reify
     om/IRenderState
     (render-state [this state]
-      (html [:li 
+      (html [:li
               [:span {:class "meta"}
                 [:span {:class "user"} (:user message)]
                 [:span {:class "date"} (format-date (:date message))]]
@@ -70,7 +84,7 @@
     {:method :post
      :params {:username (str username)
               :password (str password)}}
-    (fn [ajax-resp] 
+    (fn [ajax-resp]
       (om/update! app :user {:username username})))
   (sente/chsk-reconnect! chsk))
 
@@ -92,9 +106,10 @@
       {})
     om/IRenderState
     (render-state [this state]
+      (println "render" app)
       (let [messages (:messages app)
-            user (:user app)]
-        (if (nil? user)
+            username (-> app :user :username)]
+        (if (nil? username)
           (om/build login-view app)
           (html [:div {:class "page-wrap"}
                   [:nav {:id "main-nav"}
@@ -106,9 +121,9 @@
                     [:div {:class "content"}
                       [:ol {:class "messages"}
                         (om/build-all message-view messages {:key :id})]
-                      [:form {:class "new-message" :on-submit #(post-message % (om/get-node owner "message-field") messages @user)}
+                      [:div {:class "new-message"}
                         [:textarea {:ref "message-field" :placeholder "Write a tarded message here"}]
-                        [:input {:type "submit" :value "Send"}]]]]]))))))
+                        [:input {:type "button" :on-click #(post-message (om/get-node owner "message-field") messages username) :value "Send"}]]]]]))))))
 
 (om/root messages-view app-state
   {:target (.querySelector js/document "body")})
