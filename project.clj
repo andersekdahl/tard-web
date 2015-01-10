@@ -11,29 +11,31 @@
                  [com.taoensso/sente "1.2.0"]
                  [com.taoensso/timbre "3.3.1"]
                  [com.andrewmcveigh/cljs-time "0.3.0"]
-                 [com.cognitect/transit-cljs "0.8.194"]]
-
+                 [com.cognitect/transit-cljs "0.8.194"]
+                 [reagent "0.5.0-alpha"]]
+  
   :node-dependencies [[source-map-support "0.2.8"]]
-
+  
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-npm "0.4.0"]]
-
+  
   :source-paths ["src" "target/classes"]
-
+  
   :clean-targets ["dist/out/tard_web" "dist/tard_web.js" "dist/tard_web.min.js"]
 
   :cljsbuild {
     :builds [{:id "dev"
               :source-paths ["src"]
               :compiler {
-                :output-to "dist/tard_web.js"
-                :output-dir "dist/out"
-                :optimizations :none
-                :cache-analysis true                
-                :source-map true}}
+                         :preamble ["reagent/react.js"]
+                         :output-to "dist/tard_web.js"
+                         :output-dir "dist/out"
+                         :optimizations :none
+                         :cache-analysis true                
+                         :source-map true}}
              {:id "release"
               :source-paths ["src"]
               :compiler {
-                :output-to "dist/tard_web.min.js"
-                :pretty-print false              
-                :optimizations :advanced}}]})
+                         :output-to "dist/tard_web.min.js"
+                         :pretty-print false              
+                         :optimizations :advanced}}]})
