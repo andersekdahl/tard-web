@@ -60,12 +60,15 @@
 
 (defn save [message]
   (let [messages (:messages @app-state)]
-     (println "mess" messages "app" @app-state)
-      (swap! app-state (assoc @app-state :messages (conj (:messages @app-state) message)))))
+    (println "mess" message)
+     (println "mess1" messages "app" @app-state)
+     (swap! app-state assoc :messages (conj messages message))
+     (println "mess2" messages "app1" @app-state)))
 
 (defn post-message [message username]
-  (let [mess (create-message message username)]
+  (let [mess (create-message @message username)]
     (save mess)
+    (println "app" @app-state)
     (chsk-send! [:messages/new (assoc mess :date (format/unparse (format/formatters :date-hour-minute-second) (:date mess)))])))
 
 (defn message-input [user]
@@ -75,15 +78,16 @@
      [:input {:type "button" :on-click #(do (post-message message user) (reset! message "")) :value "Send"}]]))
   
 
-(defn login! [username password]
-  (println "login" @app-state)
-  (sente/ajax-call "http://localhost:8080/login"
-                   {:method :post
-                    :params {:username (str username)
-                             :password (str password)}}
-                   (fn [ajax-resp]
-                     (swap! app-state :username {:messages [] :username username})))
-  (sente/chsk-reconnect! chsk))
+(defn login! [user-state password-state]
+  (do
+    (sente/ajax-call "http://localhost:8080/login"
+                     {:method :post
+                      :params {:username (str @user-state)
+                               :password (str @password-state)}}
+                     (fn [ajax-resp]
+                       (swap! app-state :username {:messages [] :username @user-state})))
+     (println "login!" @app-state)
+    (sente/chsk-reconnect! chsk)))
 
 (defn message-view [message]
   [:li
@@ -100,7 +104,7 @@
      [:div
       [:input {:type "text" :placeholder "Username" :on-change #(reset! user (-> % .-target .-value))}  ]
       [:input {:type "password" :placeholder "Password" :on-change #(reset! pass (-> % .-target .-value))} ]
-      [:input {:type "submit" :value "Login" :on-click #(login! @user @pass) }]]])) 
+      [:input {:type "submit" :value "Login" :on-click #(login! user pass) }]]])) 
 
 (defn messages-view []
   (let [messages (:messages @app-state)
@@ -118,8 +122,12 @@
           [:h2 "Messages"]
           [:div {:class "content"}
            [:ol {:class "messages"}
-            (for [message (:messages @app-state)]
-              (message-view message))]
+            (do
+              (println "rerend mess: " messages "use" username) 
+              (for [message (:messages @app-state)]
+                (do
+                  (println "messfor" message)
+                  (message-view message))))]
            [message-input username]]]]))))
 
 (defn render-simple []
