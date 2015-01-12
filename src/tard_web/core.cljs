@@ -124,7 +124,7 @@
           [:div {:class "content"}
            [:ol {:class "messages"}
             (for [message (:messages @app-state)]
-              [message-view message])]
+              ^{:key message} [message-view message])]
            [message-input username]]]]))))
 
 (defn render-simple []
