@@ -122,12 +122,8 @@
           [:h2 "Messages"]
           [:div {:class "content"}
            [:ol {:class "messages"}
-            (do
-              (println "rerend mess: " messages "use" username)
-              (for [message (:messages @app-state)]
-                (do
-                  (println "messfor" message)
-                  (message-view message))))]
+            (for [message (:messages @app-state)]
+              [message-view message])]
            [message-input username]]]]))))
 
 (defn render-simple []
