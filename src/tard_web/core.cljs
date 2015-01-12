@@ -3,7 +3,7 @@
     [cljs.core.async.macros :as asyncm :refer (go go-loop)])
   (:require
     [clojure.string :as str]
-    [sablono.core :as html :refer-macros [html]]    
+    [sablono.core :as html :refer-macros [html]]
     [cljs.core.async :as async :refer (<! >! put! chan)]
     [cljs-time.core :as time]
     [cljs-time.format :as format]
@@ -72,11 +72,11 @@
     (chsk-send! [:messages/new (assoc mess :date (format/unparse (format/formatters :date-hour-minute-second) (:date mess)))])))
 
 (defn message-input [user]
-  (let [message (atom "")] 
+  (let [message (atom "")]
     [:div {:class "new-message"}
      [:textarea {:ref "message-field" :placeholder "Write a tarded message here" :on-change #(reset! message (-> % .-target .-value))}]
      [:input {:type "button" :on-click #(do (post-message message user) (reset! message "")) :value "Send"}]]))
-  
+
 
 (defn login! [user-state password-state]
   (do
@@ -86,7 +86,7 @@
                                :password (str @password-state)}}
                      (fn [ajax-resp]
                        (swap! app-state :username {:messages [] :username @user-state})))
-     (println "login!" @app-state)
+                       (println "login!" @app-state)))
     (sente/chsk-reconnect! chsk)))
 
 (defn message-view [message]
@@ -104,13 +104,13 @@
      [:div
       [:input {:type "text" :placeholder "Username" :on-change #(reset! user (-> % .-target .-value))}  ]
       [:input {:type "password" :placeholder "Password" :on-change #(reset! pass (-> % .-target .-value))} ]
-      [:input {:type "submit" :value "Login" :on-click #(login! user pass) }]]])) 
+      [:input {:type "submit" :value "Login" :on-click #(login! user pass) }]]]))
 
 (defn messages-view []
   (let [messages (:messages @app-state)
         username (:username @app-state)]
     (do
-      (println "login" messages username) 
+      (println "login" messages username)
       (if (nil? username)
         [login-view]
         [:div {:class "page-wrap"}
@@ -123,7 +123,7 @@
           [:div {:class "content"}
            [:ol {:class "messages"}
             (do
-              (println "rerend mess: " messages "use" username) 
+              (println "rerend mess: " messages "use" username)
               (for [message (:messages @app-state)]
                 (do
                   (println "messfor" message)
