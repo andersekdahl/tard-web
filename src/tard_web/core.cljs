@@ -92,7 +92,7 @@
 (defn message-view [message]
   [:li
    [:span {:class "meta"}
-    [:span {:class "user"} (:user message)]
+    [:span {:class "user"} (:username message)]
     [:span {:class "date"} (format-date (:date message))]]
    [:span {:class "message"} (:message message)]])
 
