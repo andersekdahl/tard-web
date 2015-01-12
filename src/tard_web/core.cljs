@@ -85,7 +85,7 @@
                       :params {:username (str @user-state)
                                :password (str @password-state)}}
                      (fn [ajax-resp]
-                       (swap! app-state :username {:messages [] :username @user-state})))
+                       (swap! app-state assoc :username @user-state)
                        (println "login!" @app-state)))
     (sente/chsk-reconnect! chsk)))
 
