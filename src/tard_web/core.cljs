@@ -56,10 +56,7 @@
 
 (defn save [message]
   (let [messages (:messages @app-state)]
-    (println "mess" message)
-     (println "mess1" messages "app" @app-state)
-     (swap! app-state assoc :messages (conj messages message))
-     (println "mess2" messages "app1" @app-state)))
+    (swap! app-state assoc :messages (conj messages message))))
 
 (defn post-message [message username]
   (let [mess (create-message @message username)]
