@@ -85,10 +85,10 @@
 
 (defn message-view [message]
   [:li
-   [:span {:class "meta"}
-    [:span {:class "user"} (:username message)]
-    [:span {:class "date"} (format-date (:date message))]]
-   [:span {:class "message"} (:message message)]])
+   [:span.meta
+    [:span.user (:username message)]
+    [:span.date (format-date (:date message))]]
+   [:span.message (:message message)]])
 
 (defn login-view []
   (let [user (atom "")
