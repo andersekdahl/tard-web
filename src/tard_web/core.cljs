@@ -15,8 +15,9 @@
 (enable-console-print!)
 
 ;; sente stuff, extract this later
-
-(def app-state (atom {:messages [] :username nil}))
+ 
+(def messages (atom []))
+(def user (atom {:name nil}))
 
 (def packer (sente-transit/get-flexi-packer :edn))
 
@@ -33,7 +34,7 @@
   (def chsk-state state))
 
 (defn message-exists? [message]
-  (some #(= (:id %) (:id message)) (:messages @app-state)))
+  (some #(= (:id %) (:id message)) @messages))
 
 (defn parse-date [date]
   (format/parse (format/formatters :date-hour-minute-second) (str date)))
@@ -45,8 +46,8 @@
          data (vec (:?data v))
          message (nth data 1)]
      (and (= :messages/new (nth data 0)) (not (message-exists? message))
-       (swap! app-state #(assoc % :messages (conj (:messages %) (assoc message :date (parse-date (:date message)))))))
-   (recur)))
+          (swap! messages conj (assoc message :date (parse-date (:date message))))))
+   (recur))
 
 (defn format-date [date]
   (format/unparse (format/formatter "yyyy-MM-dd HH:mm:ss") date))
@@ -55,13 +56,11 @@
   {:id (rand-int 1000) :username user :message message :date (time/now)})
 
 (defn save [message]
-  (let [messages (:messages @app-state)]
-    (swap! app-state assoc :messages (conj messages message))))
+  (swap! @messages conj message))
 
 (defn post-message [message username]
   (let [mess (create-message @message username)]
     (save mess)
-    (println "app" @app-state)
     (chsk-send! [:messages/new (assoc mess :date (format/unparse (format/formatters :date-hour-minute-second) (:date mess)))])))
 
 (defn message-input [user]
@@ -76,11 +75,12 @@
   (do
     (sente/ajax-call "http://localhost:8080/login"
                      {:method :post
-                      :params {:username (str @user-state)
+                      :params {:name (str @user-state)
                                :password (str @password-state)}}
                      (fn [ajax-resp]
-                       (swap! app-state assoc :username @user-state)
-                       (println "login!" @app-state)))
+                       (swap! user assoc :name @user-state)
+                       (println "name: " @user))
+                    )
     (sente/chsk-reconnect! chsk)))
 
 (defn message-view [message]
@@ -91,22 +91,23 @@
    [:span.message (:message message)]])
 
 (defn login-view []
-  (let [user (atom "")
+  (let [username (atom "")
         pass (atom "")]
     [:div
      [:h1 "Welcome to the Tard!"]
      [:div
-      [:input {:type "text" :placeholder "Username" :on-change #(reset! user (-> % .-target .-value))}  ]
+      [:input {:type "text" :placeholder "Username" :on-change #(reset! username (-> % .-target .-value))}  ]
       [:input {:type "password" :placeholder "Password" :on-change #(reset! pass (-> % .-target .-value))} ]
-      [:input {:type "submit" :value "Login" :on-click #(login! user pass) }]]]))
+      [:input {:type "submit" :value "Login" :on-click #(login! username pass) }]]]))
 
 (defn messages-view []
-  (let [messages (:messages @app-state)
-        username (:username @app-state)]
+  (let [username (:name @user)]
     (do
       (println "login" messages username)
-      (if (nil? username)
-        [login-view]
+      (if (nil? (:name @user))
+        (do
+          (println "wow:" (:name @user))
+          [login-view])
         [:div {:class "page-wrap"}
          [:nav {:id "main-nav"}
           [:h1 "Tard"]
@@ -116,7 +117,8 @@
           [:h2 "Messages"]
           [:div {:class "content"}
            [:ol {:class "messages"}
-            (for [message (:messages @app-state)]
+            (println "mess: " @messages)
+            (for [message @messages]
               ^{:key message} [message-view message])]
            [message-input username]]]]))))
 
@@ -125,3 +127,4 @@
                           (.-body js/document)))
 
 (render-simple)
+
