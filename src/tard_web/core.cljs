@@ -70,7 +70,7 @@
 (defn message-input [user]
   (let [message (atom "")]
     (fn []
-      [:div {:class "new-message"}
+      [:div.new-message
        [:textarea {:ref "message-field" :value @message :placeholder "Write a tarded message here" :on-change #(reset! message (-> % .-target .-value))}]
        [:input {:type "button" :on-click #(do (post-message message user) (reset! message "")) :value "Send"}]])))
 
