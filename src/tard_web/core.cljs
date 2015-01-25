@@ -38,19 +38,15 @@
 (defn parse-date [date]
   (format/parse (format/formatters :date-hour-minute-second) (str date)))
 
-;; (go-loop []
-;;   ; todo: ?data in v can either be a vector or a map, which
-;;   ; leads to this somewhat ugly code.
-;;   (let [v (<! ch-chsk)
-;;         data (vec (:?data v))
-;;         message (nth data 1)]
-
-;;     (and (= :messages/new (nth data 0)) (not (message-exists? message))
-;;       (om/transact!
-;;         (om/to-cursor @app-state app-state [])
-;;         :messages
-;;         #(conj % (assoc message :date (parse-date (:date message))))))
-;;   (recur)))
+ (go-loop []
+   ; todo: ?data in v can either be a vector or a map, which
+   ; leads to this somewhat ugly code.
+   (let [v (<! ch-chsk)
+         data (vec (:?data v))
+         message (nth data 1)]
+     (and (= :messages/new (nth data 0)) (not (message-exists? message))
+       (swap! app-state #(assoc % :messages (conj (:messages %) (assoc message :date (parse-date (:date message)))))))
+   (recur)))
 
 (defn format-date [date]
   (format/unparse (format/formatter "yyyy-MM-dd HH:mm:ss") date))
@@ -132,8 +128,3 @@
                           (.-body js/document)))
 
 (render-simple)
-
-
-
-
-
